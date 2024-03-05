@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Lesson, Owner, Product
+
+from .models import Lesson, User, Product
 
 
 class LessonSerializer(serializers.ModelSerializer):
@@ -10,11 +11,13 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Owner
+        model = User
         fields = '__all__'
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    lesson = LessonSerializer(read_only=True, many=True)
+
     class Meta:
         model = Product
         fields = '__all__'
