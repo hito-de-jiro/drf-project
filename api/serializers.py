@@ -1,26 +1,12 @@
 from rest_framework import serializers
 
-from .models import Lesson, Owner, Product, User
-
-
-class OwnerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Owner
-        fields = '__all__'
+from .models import Lesson, Customer, Product, Owner
 
 
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = '__all__'
-
-
-class UserSerializer(serializers.ModelSerializer):
-    watched_lessons = LessonSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = User
-        fields = '__all__'
+        fields = ['id', 'title', 'duration', 'status_watched', 'last_watched', 'product']
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -28,4 +14,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('owner', 'name', 'description', 'lessons')
+        fields = ['id', 'owner', 'name', 'description', 'lessons']
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    products = ProductSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Customer
+        fields = ['username', 'products']
