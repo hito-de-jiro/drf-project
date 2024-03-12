@@ -23,9 +23,12 @@ class Lesson(models.Model):
 
 class UserLesson(models.Model):
     user = models.ForeignKey(User, verbose_name='user', on_delete=models.PROTECT)
-    lesson = models.ForeignKey(Lesson, verbose_name='lesson', on_delete=models.PROTECT)
+    lesson = models.ForeignKey(Lesson, verbose_name='lesson', related_name='lessons', on_delete=models.PROTECT)
 
-    time_watched = models.DurationField(blank=True, null=True)
+    time_watched = models.DurationField(blank=True, null=True, default=0)
     status_watched = models.BooleanField(default=False)
 
     last_watched = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    def __str__(self):
+        return '%d: %s' % (self.user, self.lesson)
