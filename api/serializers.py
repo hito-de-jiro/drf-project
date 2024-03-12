@@ -1,25 +1,31 @@
 from rest_framework import serializers
 
-from .models import Lesson, Customer, Product, Owner
+from .models import Lesson, UserLesson, Product
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    # product = ProductSerializer(many=True, read_only=True)
+    products_lessons = serializers.StringRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'duration', 'status_watched', 'last_watched', 'product']
+        fields = ['title', 'url', 'duration', 'product', 'products_lessons']
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(read_only=True, many=True)
+    products_lessons = LessonSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'owner', 'name', 'description', 'lessons']
+        fields = ['name', 'products_lessons']
+        depth = 1
 
 
-class CustomerSerializer(serializers.ModelSerializer):
-    products = ProductSerializer(read_only=True, many=True)
+class UserLessonSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True, many=True)
 
     class Meta:
-        model = Customer
-        fields = ['username', 'products']
+        model = UserLesson
+        fields = ['lesson', 'time_watched', 'status_watched', 'product']
+        depth = 1
+        read_only_fields = ['lesson', 'time_watched', 'status_watched', ]
