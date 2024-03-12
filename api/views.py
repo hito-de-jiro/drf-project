@@ -2,14 +2,19 @@ from rest_framework import generics
 
 from api.models import (
     Product,
-    Customer,
+    UserLesson,
     Lesson
 )
 from api.serializers import (
     LessonSerializer,
     ProductSerializer,
-    CustomerSerializer,
+    UserLessonSerializer,
 )
+
+
+class UserLessonAPIList(generics.ListAPIView):
+    serializer_class = UserLessonSerializer
+    queryset = UserLesson.objects.all()
 
 
 class LessonAPIList(generics.ListAPIView):
@@ -20,8 +25,3 @@ class LessonAPIList(generics.ListAPIView):
 class ProductAPIList(generics.ListAPIView):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
-
-
-class CustomerAPIList(generics.ListAPIView):
-    serializer_class = CustomerSerializer
-    queryset = Customer.objects.all()
