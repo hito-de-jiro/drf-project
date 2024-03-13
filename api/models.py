@@ -3,32 +3,52 @@ from django.db import models
 
 
 class Product(models.Model):
-    owner = models.ForeignKey(User, verbose_name='owner', on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    owner = models.ForeignKey(User, related_name='owner', on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.name)
 
 
+class UserProductAccess(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+
 class Lesson(models.Model):
     title = models.CharField(max_length=255)
     url = models.URLField()
-    duration = models.IntegerField(default=0)
+    duration = models.IntegerField()
 
-    product = models.ManyToManyField(Product, related_name='products_lessons')
+    product = models.ManyToManyField(Product)
 
     def __str__(self):
         return str(self.title)
 
 
 class UserLesson(models.Model):
-    user = models.ForeignKey(User, verbose_name='user', on_delete=models.PROTECT)
-    lesson = models.ForeignKey(Lesson, verbose_name='lesson', related_name='lessons', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
 
-    time_watched = models.DurationField(blank=True, null=True, default=0)
-    status_watched = models.BooleanField(default=False)
+    time_watched = models.IntegerField()
+    WATCHED = 'Watched'
+    NOT_WATCHED = 'Not Watched'
+
+    STATUS_CHOICES = [
+        (WATCHED, 'watched'),
+        (NOT_WATCHED, 'not watched'),
+    ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
 
     last_watched = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        if self.time_watched >= 0.8 * self.lesson.duration:
+            self.status = self.WATCHED
+        else:
+            self.status = self.NOT_WATCHED
+        super(UserLesson, self).save(*args, **kwargs)
+
     def __str__(self):
-        return '%d: %s' % (self.user, self.lesson)
+        return str(self.lesson)
