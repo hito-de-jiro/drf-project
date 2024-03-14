@@ -1,9 +1,10 @@
 from rest_framework import generics
 
-from .models import LessonView
+from .models import LessonView, Product
 from .serializers import (
     LessonViewSerializer,
     LessonViewExtendedSerializer,
+    ProductStatisticsSerializer,
 )
 
 
@@ -25,3 +26,8 @@ class ProductLessonViewListAPIView(generics.ListAPIView):
         queryset = LessonView.objects.filter(user=user,
                                              lesson__products__id=product_id)
         return queryset
+
+
+class ProductStatisticsListAPIView(generics.ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductStatisticsSerializer
