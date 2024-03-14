@@ -1,53 +1,27 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, viewsets
-from rest_framework.response import Response
+from rest_framework import generics
 
-from api.models import (
-    Product,
-    UserLesson,
-    Lesson
-)
-from api.serializers import (
-    LessonSerializer,
-    ProductSerializer,
-    UserLessonSerializer,
+from .models import LessonView
+from .serializers import (
+    LessonViewSerializer,
+    LessonViewExtendedSerializer,
 )
 
 
-class UserLessonListAPIView(generics.ListAPIView):
-    serializer_class = UserLessonSerializer
+class LessonViewListAPIView(generics.ListAPIView):
+    serializer_class = LessonViewSerializer
 
     def get_queryset(self):
         user = self.request.user
-        queryset = UserLesson.objects.filter(user=user)
+        queryset = LessonView.objects.filter(user=user)
         return queryset
 
 
-# class UserLessonAPIList(generics.ListAPIView):
-#     serializer_class = UserLessonSerializer
-#     queryset = UserLesson.objects.all()
+class ProductLessonViewListAPIView(generics.ListAPIView):
+    serializer_class = LessonViewExtendedSerializer
 
-
-# class UserLessonAPIDetail(viewsets.ViewSet):
-#     def list(self, request):
-#         queryset = UserLesson.objects.all()
-#         serializer = UserLessonSerializer(
-#             queryset, many=True
-#         )
-#         return Response(serializer.data)
-#
-#     def retrieve(self, request, pk=None):
-#         queryset = UserLesson.objects.all()
-#         lessons = get_object_or_404(queryset, pk=pk)
-#         serializer = UserLessonSerializer(lessons)
-#         return Response(serializer.data)
-
-
-class LessonAPIList(generics.ListCreateAPIView):
-    serializer_class = LessonSerializer
-    queryset = Lesson.objects.all()
-
-
-class ProductAPIList(generics.ListCreateAPIView):
-    serializer_class = ProductSerializer
-    queryset = Product.objects.all()
+    def get_queryset(self):
+        user = self.request.user
+        product_id = self.kwargs.get('product_id')
+        queryset = LessonView.objects.filter(user=user,
+                                             lesson__products__id=product_id)
+        return queryset
