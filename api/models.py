@@ -1,13 +1,10 @@
-from django.contrib.auth.models import User
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    owner = models.ForeignKey(User, related_name='owner', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.name)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class UserProductAccess(models.Model):
@@ -17,20 +14,18 @@ class UserProductAccess(models.Model):
 
 class Lesson(models.Model):
     title = models.CharField(max_length=255)
-    url = models.URLField()
-    duration = models.IntegerField()
+    video_link = models.URLField()
+    duration_seconds = models.IntegerField()
 
-    product = models.ManyToManyField(Product)
-
-    def __str__(self):
-        return str(self.title)
+    products = models.ManyToManyField(Product)
 
 
-class UserLesson(models.Model):
+class LessonView(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, related_name='lesson', on_delete=models.CASCADE)
+    watched_time_seconds = models.IntegerField()
+    last_watched_time = models.DateTimeField(auto_now=True)
 
-    time_watched = models.IntegerField()
     WATCHED = 'Watched'
     NOT_WATCHED = 'Not Watched'
 
@@ -41,14 +36,13 @@ class UserLesson(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
 
-    last_watched = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    class Meta:
+        unique_together = ['user', 'lesson']
 
     def save(self, *args, **kwargs):
-        if self.time_watched >= 0.8 * self.lesson.duration:
+        if self.watched_time_seconds >= 0.8 * self.lesson.duration_seconds:
             self.status = self.WATCHED
         else:
             self.status = self.NOT_WATCHED
-        super(UserLesson, self).save(*args, **kwargs)
+        super(LessonView, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return str(self.lesson)
