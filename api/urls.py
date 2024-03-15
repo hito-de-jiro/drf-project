@@ -4,6 +4,8 @@ from .views import (
     LessonListAPIView,
     ProductLessonListAPIView,
     ProductStatisticsListAPIView,
+    ProductListCreateAPIView,
+    LessonCreateAPIView
 )
 
 urlpatterns = [
@@ -12,4 +14,7 @@ urlpatterns = [
          name='product-lesson-views-list'),
     path('product-statistics/', ProductStatisticsListAPIView.as_view(),
          name='product-statistics-list'),
+
+    path('add-products/', ProductListCreateAPIView.as_view(), name='add-product'),
+    path('add-lessons/', LessonCreateAPIView.as_view(), name='add-lesson'),
 ]

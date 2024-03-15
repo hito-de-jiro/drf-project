@@ -8,7 +8,8 @@ from .models import LessonView, Product, Lesson, UserProductAccess
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', ]
+        fields = ['username']
+        read_only_fields = ['username']
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -17,7 +18,22 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['name', 'owner']
+        fields = '__all__'
+
+
+class NewProductSerializer(serializers.ModelSerializer):
+    """Serializer for Product and Lesson objects"""
+
+    class Meta:
+        model = Product
+        fields = ['name', 'owner', 'lessons']
+        read_only_fields = ['owner']
+
+    lessons = serializers.SerializerMethodField()
+
+    def get_lessons(self, obj):
+        lessons = Lesson.objects.filter(products=obj)
+        return LessonSerializer(lessons, many=True).data
 
 
 class LessonSerializer(serializers.ModelSerializer):
@@ -31,11 +47,12 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
-    lesson = LessonSerializer()
+    lesson = LessonSerializer(many=True)
 
     class Meta:
         model = LessonView
         fields = ['lesson', 'watched_time_seconds', 'status']
+        read_only_fields = ['status']
 
 
 class LessonExtendedSerializer(serializers.ModelSerializer):
@@ -46,6 +63,16 @@ class LessonExtendedSerializer(serializers.ModelSerializer):
         model = LessonView
         fields = ['lesson', 'watched_time_seconds',
                   'status', 'last_watched_time']
+        read_only_fields = ['status', 'last_watched_time']
+
+
+class NewLessonSerializer(serializers.ModelSerializer):
+    """Serializer for a new lesson"""
+    products = ProductSerializer(many=True)
+
+    class Meta:
+        model = Lesson
+        fields = ['title', 'video_link', 'duration_seconds', 'products']
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):
@@ -57,14 +84,14 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['name', 'total_watched_lessons', 'total_watching_time', 'total_students',
+        fields = ['owner', 'name', 'total_watched_lessons', 'total_watching_time', 'total_students',
                   'acquisition_percentage']
 
     def get_total_watched_lessons(self, obj):
         return Lesson.objects.filter(products=obj).count()
 
     def get_total_watching_time(self, obj):
-        total_time = LessonView.objects.filter(lesson__products=obj).aggregate(total_time=Sum('watched_time_seconds'))[
+        total_time = LessonView.objects.filter(status='Watched').aggregate(total_time=Sum('watched_time_seconds'))[
             'total_time']
         return total_time if total_time else 0
 

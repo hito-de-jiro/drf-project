@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 
@@ -23,21 +25,23 @@ class Lesson(models.Model):
 
 
 class LessonView(models.Model):
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, related_name='lesson', on_delete=models.CASCADE)
     watched_time_seconds = models.IntegerField(default=0)
+    status = models.CharField(max_length=20, default='Not Watched')
+
     last_watched_time = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20,  default='Not Watched')
 
     class Meta:
         unique_together = ['user', 'lesson']
 
 
-@receiver(post_save, sender=LessonView)
+@receiver(pre_save, sender=LessonView)
 def update_lesson_view_status(sender, instance, **kwargs):
     if instance.watched_time_seconds >= 0.8 * instance.lesson.duration_seconds:
         instance.status = 'Watched'
     else:
         instance.status = 'Not Watched'
+
+    instance.last_watched_time = datetime.now()
     instance.save()

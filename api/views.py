@@ -5,6 +5,8 @@ from .serializers import (
     LessonViewSerializer,
     LessonExtendedSerializer,
     ProductStatisticsSerializer,
+    NewProductSerializer,
+    NewLessonSerializer,
 )
 
 
@@ -34,3 +36,22 @@ class ProductStatisticsListAPIView(generics.ListAPIView):
     """Displaying for displaying statistics for all products"""
     queryset = Product.objects.all()
     serializer_class = ProductStatisticsSerializer
+
+
+class ProductListCreateAPIView(generics.ListCreateAPIView):
+    """Displaying and create for new products"""
+    serializer_class = NewProductSerializer
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(owner=user)
+
+    def get_queryset(self):
+        queryset = Product.objects.filter(owner=self.request.user)
+        return queryset
+
+
+class LessonCreateAPIView(generics.ListCreateAPIView):
+    """Displaying and create for new lessons"""
+    serializer_class = NewLessonSerializer
+
