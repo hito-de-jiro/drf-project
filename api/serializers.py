@@ -5,19 +5,23 @@ from rest_framework import serializers
 from .models import LessonView, Product, Lesson, UserProductAccess
 
 
-class LessonViewSerializer(serializers.ModelSerializer):
+class LessonSerializer(serializers.ModelSerializer):
+    """Serializer for user-related lessons"""
     class Meta:
         model = LessonView
         fields = ['id', 'lesson', 'watched_time_seconds', 'status']
 
 
-class LessonViewExtendedSerializer(serializers.ModelSerializer):
+class LessonExtendedSerializer(serializers.ModelSerializer):
+    """Serializer for product-related and user-related lessons"""
     class Meta:
         model = LessonView
-        fields = ['id', 'lesson', 'watched_time_seconds', 'status', 'last_watched_time']
+        fields = ['id', 'lesson', 'watched_time_seconds'
+                                  'status', 'last_watched_time']
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):
+    """Serializer for displaying statistics for all products"""
     total_watched_lessons = serializers.SerializerMethodField()
     total_watching_time = serializers.SerializerMethodField()
     total_students = serializers.SerializerMethodField()
