@@ -16,7 +16,7 @@ class LessonExtendedSerializer(serializers.ModelSerializer):
     """Serializer for product-related and user-related lessons"""
     class Meta:
         model = LessonView
-        fields = ['id', 'lesson', 'watched_time_seconds'
+        fields = ['id', 'lesson', 'watched_time_seconds',
                                   'status', 'last_watched_time']
 
 
@@ -46,4 +46,4 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
     def get_acquisition_percentage(self, obj):
         total_users = User.objects.count()
         access_count = obj.userproductaccess_set.count()
-        return (access_count / total_users) * 100 if total_users > 0 else 0
+        return round(((access_count / total_users) * 100), 2) if total_users > 0 else 0
