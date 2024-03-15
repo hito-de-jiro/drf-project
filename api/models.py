@@ -1,5 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Product(models.Model):
@@ -21,28 +23,21 @@ class Lesson(models.Model):
 
 
 class LessonView(models.Model):
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, related_name='lesson', on_delete=models.CASCADE)
-    watched_time_seconds = models.IntegerField()
+    watched_time_seconds = models.IntegerField(default=0)
     last_watched_time = models.DateTimeField(auto_now=True)
-
-    WATCHED = 'Watched'
-    NOT_WATCHED = 'Not Watched'
-
-    STATUS_CHOICES = [
-        (WATCHED, 'watched'),
-        (NOT_WATCHED, 'not watched'),
-    ]
-
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=20,  default='Not Watched')
 
     class Meta:
         unique_together = ['user', 'lesson']
 
-    def save(self, *args, **kwargs):
-        if self.watched_time_seconds >= 0.8 * self.lesson.duration_seconds:
-            self.status = self.WATCHED
-        else:
-            self.status = self.NOT_WATCHED
-        super(LessonView, self).save(*args, **kwargs)
 
+@receiver(post_save, sender=LessonView)
+def update_lesson_view_status(sender, instance, **kwargs):
+    if instance.watched_time_seconds >= 0.8 * instance.lesson.duration_seconds:
+        instance.status = 'Watched'
+    else:
+        instance.status = 'Not Watched'
+    instance.save()

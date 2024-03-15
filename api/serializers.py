@@ -5,19 +5,47 @@ from rest_framework import serializers
 from .models import LessonView, Product, Lesson, UserProductAccess
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', ]
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    """Serializer for Product object"""
+    owner = UserSerializer()
+
+    class Meta:
+        model = Product
+        fields = ['name', 'owner']
+
+
 class LessonSerializer(serializers.ModelSerializer):
+    """Serializer for Lesson object"""
+    products = ProductSerializer(many=True)
+
+    class Meta:
+        model = Lesson
+        fields = ['title', 'video_link', 'duration_seconds', 'products']
+
+
+class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
+    lesson = LessonSerializer()
+
     class Meta:
         model = LessonView
-        fields = ['id', 'lesson', 'watched_time_seconds', 'status']
+        fields = ['lesson', 'watched_time_seconds', 'status']
 
 
 class LessonExtendedSerializer(serializers.ModelSerializer):
     """Serializer for product-related and user-related lessons"""
+    lesson = LessonSerializer()
+
     class Meta:
         model = LessonView
         fields = ['id', 'lesson', 'watched_time_seconds',
-                                  'status', 'last_watched_time']
+                  'status', 'last_watched_time']
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):

@@ -2,7 +2,7 @@ from rest_framework import generics
 
 from .models import LessonView, Product
 from .serializers import (
-    LessonSerializer,
+    LessonViewSerializer,
     LessonExtendedSerializer,
     ProductStatisticsSerializer,
 )
@@ -10,7 +10,7 @@ from .serializers import (
 
 class LessonListAPIView(generics.ListAPIView):
     """Displaying for user-related lessons"""
-    serializer_class = LessonSerializer
+    serializer_class = LessonViewSerializer
 
     def get_queryset(self):
         user = self.request.user
