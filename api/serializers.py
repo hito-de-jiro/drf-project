@@ -44,7 +44,7 @@ class LessonExtendedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LessonView
-        fields = ['id', 'lesson', 'watched_time_seconds',
+        fields = ['lesson', 'watched_time_seconds',
                   'status', 'last_watched_time']
 
 
@@ -57,7 +57,7 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'total_watched_lessons', 'total_watching_time', 'total_students',
+        fields = ['name', 'total_watched_lessons', 'total_watching_time', 'total_students',
                   'acquisition_percentage']
 
     def get_total_watched_lessons(self, obj):
