@@ -1,13 +1,12 @@
 from rest_framework import generics
 
-from .models import LessonView, Product
+from .models import LessonView, Product, Lesson
 from .serializers import (
     LessonViewSerializer,
     LessonExtendedSerializer,
     ProductStatisticsSerializer,
     NewProductSerializer,
-    NewLessonSerializer,
-)
+    NewLessonSerializer, NewViewedLessonSerializer, )
 
 
 class LessonListAPIView(generics.ListAPIView):
@@ -38,6 +37,9 @@ class ProductStatisticsListAPIView(generics.ListAPIView):
     serializer_class = ProductStatisticsSerializer
 
 
+"""create data for tests"""
+
+
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     """Displaying and create for new products"""
     serializer_class = NewProductSerializer
@@ -51,7 +53,27 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
         return queryset
 
 
-class LessonCreateAPIView(generics.ListCreateAPIView):
+class LessonListCreateAPIView(generics.ListCreateAPIView):
     """Displaying and create for new lessons"""
     serializer_class = NewLessonSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        queryset = Lesson.objects.filter(products__owner=user)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+class UserLessonDetailAPIView(generics.UpdateAPIView):
+    serializer_class = NewViewedLessonSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        product_id = self.kwargs.get('product_id')
+        queryset = LessonView.objects.filter(user=user,
+                                             lesson__products__id=product_id)
+        return queryset
