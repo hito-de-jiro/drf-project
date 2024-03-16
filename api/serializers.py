@@ -18,22 +18,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = '__all__'
-
-
-class NewProductSerializer(serializers.ModelSerializer):
-    """Serializer for Product and Lesson objects"""
-
-    class Meta:
-        model = Product
-        fields = ['name', 'owner', 'lessons']
-        read_only_fields = ['owner']
-
-    lessons = serializers.SerializerMethodField()
-
-    def get_lessons(self, obj):
-        lessons = Lesson.objects.filter(products=obj)
-        return LessonSerializer(lessons, many=True).data
+        fields = ['id', 'name', 'owner']
 
 
 class LessonSerializer(serializers.ModelSerializer):
@@ -47,7 +32,6 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
-    lesson = LessonSerializer(many=True)
 
     class Meta:
         model = LessonView
@@ -63,16 +47,7 @@ class LessonExtendedSerializer(serializers.ModelSerializer):
         model = LessonView
         fields = ['lesson', 'watched_time_seconds',
                   'status', 'last_watched_time']
-        read_only_fields = ['status', 'last_watched_time']
-
-
-class NewLessonSerializer(serializers.ModelSerializer):
-    """Serializer for a new lesson"""
-    products = ProductSerializer(many=True)
-
-    class Meta:
-        model = Lesson
-        fields = ['title', 'video_link', 'duration_seconds', 'products']
+        read_only_fields = ['status', ]
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):
@@ -102,3 +77,55 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
         total_users = User.objects.count()
         access_count = obj.userproductaccess_set.count()
         return round(((access_count / total_users) * 100), 2) if total_users > 0 else 0
+
+
+""""create data for tests"""
+
+
+class NewProductSerializer(serializers.ModelSerializer):
+    """Serializer for Product and Lesson objects"""
+
+    class Meta:
+        model = Product
+        fields = ['name', 'owner', 'lessons']
+        read_only_fields = ['owner']
+
+    lessons = serializers.SerializerMethodField()
+
+    def get_lessons(self, obj):
+        lessons = Lesson.objects.filter(products=obj)
+        return LessonSerializer(lessons, many=True).data
+
+
+class NewProductWithLessonSerializer(serializers.Serializer):
+    """Serializer for creating new product with lesson"""
+
+    name = serializers.CharField(max_length=255)
+    lesson = LessonSerializer()
+
+    def create(self, validated_data):
+        lesson_data = validated_data.pop('lesson')
+        product = Product.objects.create(name=validated_data['name'])
+        Lesson.objects.create(product=product, **lesson_data)
+        return product
+
+
+class NewLessonSerializer(serializers.ModelSerializer):
+    """Serializer for a new lesson"""
+    products = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), many=True)
+
+    class Meta:
+        model = Lesson
+        fields = ['title', 'video_link', 'duration_seconds', 'products']
+
+
+class NewViewedLessonSerializer(serializers.ModelSerializer):
+    """Serializer for product-related and user-related lessons"""
+
+    class Meta:
+        model = LessonView
+        fields = '__all__'
+        read_only_fields = ['products', 'user', 'status']
+
+        depth = 1
+
