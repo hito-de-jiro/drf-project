@@ -59,14 +59,14 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['owner', 'name', 'total_watched_lessons', 'total_watching_time', 'total_students',
+        fields = ['name', 'total_watched_lessons', 'total_watching_time', 'total_students',
                   'acquisition_percentage']
 
     def get_total_watched_lessons(self, obj):
         return Lesson.objects.filter(products=obj).count()
 
     def get_total_watching_time(self, obj):
-        total_time = LessonView.objects.filter(status='Watched').aggregate(total_time=Sum('watched_time_seconds'))[
+        total_time = LessonView.objects.filter(status=True).aggregate(total_time=Sum('watched_time_seconds'))[
             'total_time']
         return total_time if total_time else 0
 
