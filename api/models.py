@@ -33,7 +33,7 @@ class LessonView(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, related_name='lesson', on_delete=models.CASCADE)
     watched_time_seconds = models.IntegerField(default=0)
-    status = models.CharField(max_length=20, default='Not Watched')
+    status = models.BooleanField(default=False)
 
     last_watched_time = models.DateTimeField(auto_now=True)
 
@@ -44,8 +44,8 @@ class LessonView(models.Model):
 @receiver(pre_save, sender=LessonView)
 def update_lesson_view_status(sender, instance, **kwargs):
     if instance.watched_time_seconds >= 0.8 * instance.lesson.duration_seconds:
-        instance.status = 'Watched'
+        instance.status = True
     else:
-        instance.status = 'Not Watched'
+        instance.status = False
 
-    instance.last_watched_time = timezone.now()
+    instance.last_watched_time = timezone.localtime()
