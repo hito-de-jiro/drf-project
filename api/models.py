@@ -6,11 +6,11 @@ from django.utils import timezone
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=255)
+    product_name = models.CharField(max_length=255)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return self.product_name
 
 
 class UserProductAccess(models.Model):
@@ -19,23 +19,23 @@ class UserProductAccess(models.Model):
 
 
 class Lesson(models.Model):
-    title = models.CharField(max_length=255)
-    video_link = models.URLField()
-    duration_seconds = models.IntegerField()
+    lesson_title = models.CharField(max_length=255)
+    lesson_link = models.URLField()
+    lesson_duration = models.IntegerField()
 
     products = models.ManyToManyField(Product)
 
     def __str__(self):
-        return self.title
+        return self.lesson_title
 
 
 class LessonView(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     lesson = models.ForeignKey(Lesson, related_name='lesson', on_delete=models.CASCADE)
-    watched_time_seconds = models.IntegerField(default=0)
-    status = models.BooleanField(default=False)
+    time_watched = models.IntegerField(default=0)
+    status_watched = models.BooleanField(default=False)
 
-    last_watched_time = models.DateTimeField(auto_now=True)
+    last_watched = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ['user', 'lesson']
@@ -43,9 +43,9 @@ class LessonView(models.Model):
 
 @receiver(pre_save, sender=LessonView)
 def update_lesson_view_status(sender, instance, **kwargs):
-    if instance.watched_time_seconds >= 0.8 * instance.lesson.duration_seconds:
-        instance.status = True
+    if instance.time_watched >= 0.8 * instance.lesson.lesson_duration:
+        instance.status_watched = True
     else:
-        instance.status = False
+        instance.status_watched = False
 
-    instance.last_watched_time = timezone.localtime()
+    instance.last_watched = timezone.localtime()

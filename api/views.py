@@ -9,6 +9,7 @@ from .serializers import (
     NewProductSerializer,
     NewLessonSerializer,
     NewViewedLessonSerializer,
+    ProductsLessonSerializer,
 )
 
 
@@ -84,3 +85,13 @@ class UserLessonDetailAPIView(generics.RetrieveUpdateAPIView):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset)
         return obj
+
+
+class ProductsLessonAPIView(generics.ListAPIView):
+    serializer_class = ProductsLessonSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = LessonView.objects.filter(user=user.id)
+        print(queryset.exists())
+        return queryset
