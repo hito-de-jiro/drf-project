@@ -1,9 +1,8 @@
-from datetime import datetime
-
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 
 class Product(models.Model):
@@ -49,5 +48,4 @@ def update_lesson_view_status(sender, instance, **kwargs):
     else:
         instance.status = 'Not Watched'
 
-    instance.last_watched_time = datetime.now()
-    instance.save()
+    instance.last_watched_time = timezone.now()
