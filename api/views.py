@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics
 
 from .models import LessonView, Product, Lesson
@@ -6,7 +7,9 @@ from .serializers import (
     LessonExtendedSerializer,
     ProductStatisticsSerializer,
     NewProductSerializer,
-    NewLessonSerializer, NewViewedLessonSerializer, )
+    NewLessonSerializer,
+    NewViewedLessonSerializer,
+)
 
 
 class LessonListAPIView(generics.ListAPIView):
@@ -59,7 +62,6 @@ class LessonListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        print(user)
         queryset = Lesson.objects.filter(products__owner=user)
 
         return queryset
@@ -68,12 +70,17 @@ class LessonListCreateAPIView(generics.ListCreateAPIView):
         serializer.save()
 
 
-class UserLessonDetailAPIView(generics.UpdateAPIView):
+class UserLessonDetailAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = NewViewedLessonSerializer
 
     def get_queryset(self):
         user = self.request.user
-        product_id = self.kwargs.get('product_id')
-        queryset = LessonView.objects.filter(user=user,
-                                             lesson__products__id=product_id)
+        lesson_viewed_id = self.kwargs.get('pk')
+        queryset = LessonView.objects.filter(user=user.id, lesson_id=lesson_viewed_id)
+
         return queryset
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset)
+        return obj

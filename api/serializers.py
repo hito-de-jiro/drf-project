@@ -125,7 +125,4 @@ class NewViewedLessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = LessonView
         fields = '__all__'
-        read_only_fields = ['products', 'user', 'status']
-
-        depth = 1
-
+        read_only_fields = ['products', 'status', 'user', 'lesson']
