@@ -14,11 +14,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product object"""
-    owner = UserSerializer()
 
     class Meta:
         model = Product
-        fields = ['id', 'product_name', 'owner']
+        fields = ['product_name']
 
 
 class LessonSerializer(serializers.ModelSerializer):
@@ -33,21 +32,29 @@ class LessonSerializer(serializers.ModelSerializer):
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
 
+    status_watched = serializers.SerializerMethodField()
+
     class Meta:
         model = LessonView
         fields = ['lesson', 'time_watched', 'status_watched']
-        read_only_fields = ['status_watched']
+
+    def get_status_watched(self, obj):
+        return 'watched' if obj.status_watched else 'not watched'
 
 
 class LessonExtendedSerializer(serializers.ModelSerializer):
     """Serializer for product-related and user-related lessons"""
     lesson = LessonSerializer()
+    status_watched = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonView
-        fields = ['lesson', 'watched_time',
+        fields = ['lesson', 'time_watched',
                   'status_watched', 'last_watched']
-        read_only_fields = ['status_watched', ]
+        read_only_fields = ['products']
+
+    def get_status_watched(self, obj):
+        return 'watched' if obj.status_watched else 'not watched'
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):
@@ -63,10 +70,10 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
                   'product_purchase']
 
     def get_watched_lessons(self, obj):
-        return Lesson.objects.filter(products=obj).count()
+        return LessonView.objects.filter(status_watched=True).count()
 
     def get_watched_time(self, obj):
-        total_time = LessonView.objects.filter(status=True).aggregate(total_time=Sum('watched_time_seconds'))[
+        total_time = LessonView.objects.all().aggregate(total_time=Sum('time_watched'))[
             'total_time']
         return total_time if total_time else 0
 
@@ -88,7 +95,6 @@ class NewProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['product_name', 'owner', 'lessons']
-        # fields = '__all__'
         read_only_fields = ['owner']
 
     lessons = serializers.SerializerMethodField()
@@ -129,26 +135,33 @@ class NewViewedLessonSerializer(serializers.ModelSerializer):
         read_only_fields = ['products', 'status', 'user', 'lesson']
 
 
-class ProductsLessonSerializer(serializers.ModelSerializer):
-    """Displaying """
-    product_name = serializers.SerializerMethodField()
+class ProductNameSerializer(serializers.ModelSerializer):
+    """Serializer for get product name"""
 
     class Meta:
         model = Product
-        fields = ['product_name']
-        
+        fields = ['product_name', ]
 
-    def get_product_name(self, product):
+
+class ProductsLessonSerializer(serializers.ModelSerializer):
+    """Displaying all customer`s lessons"""
+    product_lessons = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ['product_lessons']
+
+    def get_product_lessons(self, product):
         lessons = product.lesson
         lesson_data = []
         try:
             lesson_view = LessonView.objects.get(user=self.context['request'].user, lesson=lessons)
-            status_watched = lesson_view.status_watched == 'Watched'
+            status_watched = lesson_view.status_watched
             time_watched = lesson_view.time_watched
         except LessonView.DoesNotExist:
-            status_watched = False == 'Not watched'
+            status_watched = False
             time_watched = 0
-        #
+
         lesson_dict = {
             'lesson_title': lessons.lesson_title,
             'lesson_link': lessons.lesson_link,
@@ -159,6 +172,5 @@ class ProductsLessonSerializer(serializers.ModelSerializer):
         lesson_data.append(lesson_dict)
 
         name_product = product.lesson.lesson_title
-        print(product.lesson)
 
         return {name_product: lesson_dict}
