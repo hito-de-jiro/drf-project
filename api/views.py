@@ -1,25 +1,24 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 
-from .models import LessonView, Product, Lesson
+from .models import LessonView, Product, Lesson, UserProductAccess
 from .serializers import (
-    LessonViewSerializer,
     LessonExtendedSerializer,
     ProductStatisticsSerializer,
     NewProductSerializer,
     NewLessonSerializer,
     NewViewedLessonSerializer,
-    ProductsLessonSerializer,
+    ProductsSerializer,
 )
 
 
-class LessonListAPIView(generics.ListAPIView):
-    """Displaying for user-related lessons"""
-    serializer_class = LessonViewSerializer
+class ProductListAPIView(generics.ListAPIView):
+    serializer_class = ProductsSerializer
 
     def get_queryset(self):
         user = self.request.user
-        queryset = LessonView.objects.filter(user=user)
+        queryset = UserProductAccess.objects.filter(user=user)
+
         return queryset
 
 
@@ -85,13 +84,3 @@ class UserLessonDetailAPIView(generics.RetrieveUpdateAPIView):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset)
         return obj
-
-
-class ProductsLessonAPIView(generics.ListAPIView):
-    serializer_class = ProductsLessonSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = LessonView.objects.filter(user=user.id)
-        print(queryset.exists())
-        return queryset

@@ -32,14 +32,14 @@ class LessonSerializer(serializers.ModelSerializer):
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
 
-    status_watched = serializers.SerializerMethodField()
+    # status_watched = serializers.SerializerMethodField()
 
     class Meta:
         model = LessonView
         fields = ['lesson', 'time_watched', 'status_watched']
 
-    def get_status_watched(self, obj):
-        return 'watched' if obj.status_watched else 'not watched'
+    # def get_status_watched(self, obj):
+    #     return 'watched' if obj.status_watched else 'not watched'
 
 
 class LessonExtendedSerializer(serializers.ModelSerializer):
@@ -143,34 +143,40 @@ class ProductNameSerializer(serializers.ModelSerializer):
         fields = ['product_name', ]
 
 
-class ProductsLessonSerializer(serializers.ModelSerializer):
-    """Displaying all customer`s lessons"""
+class ProductsSerializer(serializers.ModelSerializer):
+    product_name = serializers.SerializerMethodField()
     product_lessons = serializers.SerializerMethodField()
 
     class Meta:
-        model = Product
-        fields = ['product_lessons']
+        model = UserProductAccess
+        fields = ['product_name', 'product_lessons']
 
-    def get_product_lessons(self, product):
-        lessons = product.lesson
+    def get_product_name(self, obj):
+        return obj.product.product_name
+
+    def get_product_lessons(self, obj):
+        product = obj.product
+        lessons = Lesson.objects.filter(products=product)
+        user = self.context['request'].user
+
         lesson_data = []
-        try:
-            lesson_view = LessonView.objects.get(user=self.context['request'].user, lesson=lessons)
-            status_watched = lesson_view.status_watched
-            time_watched = lesson_view.time_watched
-        except LessonView.DoesNotExist:
-            status_watched = False
-            time_watched = 0
+        for lesson in lessons:
+            try:
+                lesson_view = LessonView.objects.get(user=user, lesson=lesson)
+                status_watched = lesson_view.status_watched
+                time_watched = lesson_view.time_watched
+            except LessonView.DoesNotExist:
+                status_watched = False
+                time_watched = 0
 
-        lesson_dict = {
-            'lesson_title': lessons.lesson_title,
-            'lesson_link': lessons.lesson_link,
-            'lesson_duration': lessons.lesson_duration,
-            'time_watched': time_watched,
-            'status_watched': status_watched
-        }
-        lesson_data.append(lesson_dict)
+            status_watched = 'watched' if status_watched else 'not watched'
 
-        name_product = product.lesson.lesson_title
-
-        return {name_product: lesson_dict}
+            lesson_dict = {
+                'lesson_title': lesson.lesson_title,
+                'lesson_link': lesson.lesson_link,
+                'lesson_duration': lesson.lesson_duration,
+                'time_watched': time_watched,
+                'status_watched': status_watched
+            }
+            lesson_data.append(lesson_dict)
+        return lesson_data
