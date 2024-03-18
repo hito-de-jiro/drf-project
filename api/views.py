@@ -3,12 +3,11 @@ from rest_framework import generics
 
 from .models import LessonView, Product, Lesson, UserProductAccess
 from .serializers import (
-    LessonExtendedSerializer,
     ProductStatisticsSerializer,
     NewProductSerializer,
     NewLessonSerializer,
     NewViewedLessonSerializer,
-    ProductsSerializer,
+    ProductsSerializer, ProductDetailSerializer,
 )
 
 
@@ -22,15 +21,14 @@ class ProductListAPIView(generics.ListAPIView):
         return queryset
 
 
-class ProductLessonListAPIView(generics.ListAPIView):
-    """Displaying for product-related and user-related lessons"""
-    serializer_class = LessonExtendedSerializer
+class ProductDetailAPIView(generics.RetrieveAPIView):
+    serializer_class = ProductDetailSerializer
 
     def get_queryset(self):
         user = self.request.user
-        product_id = self.kwargs.get('product_id')
-        queryset = LessonView.objects.filter(user=user,
-                                             lesson__products__id=product_id)
+        pk = self.kwargs.get('pk')
+        queryset = UserProductAccess.objects.filter(user=user, product__pk=pk)
+
         return queryset
 
 

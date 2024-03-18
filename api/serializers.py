@@ -31,30 +31,88 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
-
-    # status_watched = serializers.SerializerMethodField()
-
     class Meta:
         model = LessonView
         fields = ['lesson', 'time_watched', 'status_watched']
 
-    # def get_status_watched(self, obj):
-    #     return 'watched' if obj.status_watched else 'not watched'
 
-
-class LessonExtendedSerializer(serializers.ModelSerializer):
-    """Serializer for product-related and user-related lessons"""
-    lesson = LessonSerializer()
-    status_watched = serializers.SerializerMethodField()
+class ProductsSerializer(serializers.ModelSerializer):
+    product_name = serializers.SerializerMethodField()
+    product_lessons = serializers.SerializerMethodField()
 
     class Meta:
-        model = LessonView
-        fields = ['lesson', 'time_watched',
-                  'status_watched', 'last_watched']
-        read_only_fields = ['products']
+        model = UserProductAccess
+        fields = ['product_name', 'product_lessons']
 
-    def get_status_watched(self, obj):
-        return 'watched' if obj.status_watched else 'not watched'
+    def get_product_name(self, obj):
+        return obj.product.product_name
+
+    def get_product_lessons(self, obj):
+        product = obj.product
+        lessons = Lesson.objects.filter(products=product)
+        user = self.context['request'].user
+
+        lesson_data = []
+        for lesson in lessons:
+            try:
+                lesson_view = LessonView.objects.get(user=user, lesson=lesson)
+                status_watched = lesson_view.status_watched
+                time_watched = lesson_view.time_watched
+                # last_watched = lesson_view.last_watched
+            except LessonView.DoesNotExist:
+                status_watched = False
+                time_watched = 0
+
+            status_watched = 'watched' if status_watched else 'not watched'
+
+            lesson_dict = {
+                'lesson_title': lesson.lesson_title,
+                'lesson_link': lesson.lesson_link,
+                'lesson_duration': lesson.lesson_duration,
+                'time_watched': time_watched,
+                'status_watched': status_watched,
+                # 'last_watched': last_watched,
+            }
+            lesson_data.append(lesson_dict)
+        return lesson_data
+
+
+class ProductDetailSerializer(ProductsSerializer):
+
+    class Meta:
+        model = UserProductAccess
+        fields = ['product_name', 'product_lessons']
+
+    def get_product_lessons(self, obj):
+        product = obj.product
+        lessons = Lesson.objects.filter(products=product)
+        user = self.context['request'].user
+
+        lesson_data = []
+        for lesson in lessons:
+            try:
+                lesson_view = LessonView.objects.get(user=user, lesson=lesson)
+                status_watched = lesson_view.status_watched
+                time_watched = lesson_view.time_watched
+                last_watched = lesson_view.last_watched
+            except LessonView.DoesNotExist:
+                status_watched = False
+                time_watched = 0
+
+            status_watched = 'watched' if status_watched else 'not watched'
+
+            lesson_dict = {
+                'lesson_title': lesson.lesson_title,
+                'lesson_link': lesson.lesson_link,
+                'lesson_duration': lesson.lesson_duration,
+                'time_watched': time_watched,
+                'status_watched': status_watched,
+                'last_watched': last_watched,
+            }
+            lesson_data.append(lesson_dict)
+        return lesson_data
+
+        return obj.last_watched
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):
@@ -143,40 +201,4 @@ class ProductNameSerializer(serializers.ModelSerializer):
         fields = ['product_name', ]
 
 
-class ProductsSerializer(serializers.ModelSerializer):
-    product_name = serializers.SerializerMethodField()
-    product_lessons = serializers.SerializerMethodField()
 
-    class Meta:
-        model = UserProductAccess
-        fields = ['product_name', 'product_lessons']
-
-    def get_product_name(self, obj):
-        return obj.product.product_name
-
-    def get_product_lessons(self, obj):
-        product = obj.product
-        lessons = Lesson.objects.filter(products=product)
-        user = self.context['request'].user
-
-        lesson_data = []
-        for lesson in lessons:
-            try:
-                lesson_view = LessonView.objects.get(user=user, lesson=lesson)
-                status_watched = lesson_view.status_watched
-                time_watched = lesson_view.time_watched
-            except LessonView.DoesNotExist:
-                status_watched = False
-                time_watched = 0
-
-            status_watched = 'watched' if status_watched else 'not watched'
-
-            lesson_dict = {
-                'lesson_title': lesson.lesson_title,
-                'lesson_link': lesson.lesson_link,
-                'lesson_duration': lesson.lesson_duration,
-                'time_watched': time_watched,
-                'status_watched': status_watched
-            }
-            lesson_data.append(lesson_dict)
-        return lesson_data
