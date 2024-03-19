@@ -7,7 +7,8 @@ from .serializers import (
     NewProductSerializer,
     NewLessonSerializer,
     NewViewedLessonSerializer,
-    ProductsSerializer, ProductDetailSerializer,
+    ProductsSerializer,
+    ProductDetailSerializer,
 )
 
 

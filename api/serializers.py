@@ -5,13 +5,6 @@ from rest_framework import serializers
 from .models import LessonView, Product, Lesson, UserProductAccess
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['username']
-        read_only_fields = ['username']
-
-
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product object"""
 
@@ -31,12 +24,14 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
+
     class Meta:
         model = LessonView
         fields = ['lesson', 'time_watched', 'status_watched']
 
 
 class ProductsSerializer(serializers.ModelSerializer):
+    """Serializer for products and lessons, available to the user"""
     product_name = serializers.SerializerMethodField()
     product_lessons = serializers.SerializerMethodField()
 
@@ -58,7 +53,6 @@ class ProductsSerializer(serializers.ModelSerializer):
                 lesson_view = LessonView.objects.get(user=user, lesson=lesson)
                 status_watched = lesson_view.status_watched
                 time_watched = lesson_view.time_watched
-                # last_watched = lesson_view.last_watched
             except LessonView.DoesNotExist:
                 status_watched = False
                 time_watched = 0
@@ -71,13 +65,13 @@ class ProductsSerializer(serializers.ModelSerializer):
                 'lesson_duration': lesson.lesson_duration,
                 'time_watched': time_watched,
                 'status_watched': status_watched,
-                # 'last_watched': last_watched,
             }
             lesson_data.append(lesson_dict)
         return lesson_data
 
 
 class ProductDetailSerializer(ProductsSerializer):
+    """Serializer for the product and its lessons available to the user"""
 
     class Meta:
         model = UserProductAccess
@@ -98,7 +92,6 @@ class ProductDetailSerializer(ProductsSerializer):
             except LessonView.DoesNotExist:
                 status_watched = False
                 time_watched = 0
-
             status_watched = 'watched' if status_watched else 'not watched'
 
             lesson_dict = {
@@ -110,9 +103,8 @@ class ProductDetailSerializer(ProductsSerializer):
                 'last_watched': last_watched,
             }
             lesson_data.append(lesson_dict)
-        return lesson_data
 
-        return obj.last_watched
+        return lesson_data
 
 
 class ProductStatisticsSerializer(serializers.ModelSerializer):
@@ -144,7 +136,7 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
         return round(((access_count / total_users) * 100), 2) if total_users > 0 else 0
 
 
-""""create data for tests"""
+""""Create data for tests"""
 
 
 class NewProductSerializer(serializers.ModelSerializer):
@@ -160,19 +152,6 @@ class NewProductSerializer(serializers.ModelSerializer):
     def get_lessons(self, obj):
         lessons = Lesson.objects.filter(products=obj)
         return LessonSerializer(lessons, many=True).data
-
-
-class NewProductWithLessonSerializer(serializers.Serializer):
-    """Serializer for creating new product with lesson"""
-
-    name = serializers.CharField(max_length=255)
-    lesson = LessonSerializer()
-
-    def create(self, validated_data):
-        lesson_data = validated_data.pop('lesson')
-        product = Product.objects.create(name=validated_data['name'])
-        Lesson.objects.create(product=product, **lesson_data)
-        return product
 
 
 class NewLessonSerializer(serializers.ModelSerializer):
@@ -191,14 +170,3 @@ class NewViewedLessonSerializer(serializers.ModelSerializer):
         model = LessonView
         fields = '__all__'
         read_only_fields = ['products', 'status', 'user', 'lesson']
-
-
-class ProductNameSerializer(serializers.ModelSerializer):
-    """Serializer for get product name"""
-
-    class Meta:
-        model = Product
-        fields = ['product_name', ]
-
-
-
