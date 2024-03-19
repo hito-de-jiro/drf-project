@@ -119,16 +119,21 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
         fields = ['product_name', 'watched_lessons', 'watched_time', 'customer_count',
                   'product_purchase']
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['product_name'] = instance.product_name
+        return representation
+
     def get_watched_lessons(self, obj):
-        return LessonView.objects.filter(status_watched=True).count()
+        return LessonView.objects.filter(status_watched=True, lesson__products=obj).count()
 
     def get_watched_time(self, obj):
-        total_time = LessonView.objects.all().aggregate(total_time=Sum('time_watched'))[
+        total_time = LessonView.objects.filter(lesson__products=obj).aggregate(total_time=Sum('time_watched'))[
             'total_time']
         return total_time if total_time else 0
 
     def get_customer_count(self, obj):
-        return UserProductAccess.objects.filter(product=obj).count()
+        return obj.userproductaccess_set.count()
 
     def get_product_purchase(self, obj):
         total_users = User.objects.count()
