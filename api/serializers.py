@@ -67,7 +67,8 @@ class ProductsSerializer(serializers.ModelSerializer):
                 'status_watched': status_watched,
             }
             lesson_data.append(lesson_dict)
-        return lesson_data
+
+        return lesson_data if lesson_data else ['The product does not contain any lessons.']
 
 
 class ProductDetailSerializer(ProductsSerializer):
