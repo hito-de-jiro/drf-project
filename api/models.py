@@ -1,8 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
-from django.utils import timezone
+
 
 
 class Product(models.Model):
@@ -41,11 +39,4 @@ class LessonView(models.Model):
         unique_together = ['user', 'lesson']
 
 
-@receiver(pre_save, sender=LessonView)
-def update_lesson_view_status(sender, instance, **kwargs):
-    if instance.time_watched >= 0.8 * instance.lesson.lesson_duration:
-        instance.status_watched = True
-    else:
-        instance.status_watched = False
 
-    instance.last_watched = timezone.localtime()
