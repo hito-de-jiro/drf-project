@@ -68,7 +68,7 @@ class ProductsSerializer(serializers.ModelSerializer):
             }
             lesson_data.append(lesson_dict)
 
-        return lesson_data if lesson_data else ['The product does not contain any lessons.']
+        return lesson_data
 
 
 class ProductDetailSerializer(ProductsSerializer):
@@ -93,6 +93,7 @@ class ProductDetailSerializer(ProductsSerializer):
             except LessonView.DoesNotExist:
                 status_watched = False
                 time_watched = 0
+                last_watched = 0
             status_watched = 'watched' if status_watched else 'not watched'
 
             lesson_dict = {

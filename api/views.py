@@ -17,7 +17,7 @@ class ProductListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = UserProductAccess.objects.filter(user=user)
+        queryset = UserProductAccess.objects.filter(user=user.id)
 
         return queryset
 
@@ -28,18 +28,23 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     def get_queryset(self):
         user = self.request.user
         pk = self.kwargs.get('pk')
-        queryset = UserProductAccess.objects.filter(user=user, product__pk=pk)
+        queryset = UserProductAccess.objects.filter(user=user.id, product__pk=pk)
 
         return queryset
 
 
 class ProductStatisticsListAPIView(generics.ListAPIView):
     """Displaying for displaying statistics for all products"""
-    queryset = Product.objects.all()
+
     serializer_class = ProductStatisticsSerializer
 
+    def get_queryset(self):
+        queryset = Product.objects.all()
 
-"""create data for tests"""
+        return queryset
+
+
+""" Create data"""
 
 
 class ProductListCreateAPIView(generics.ListCreateAPIView):
@@ -52,6 +57,7 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Product.objects.filter(owner=self.request.user)
+
         return queryset
 
 
@@ -82,4 +88,5 @@ class UserLessonDetailAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset)
+
         return obj
