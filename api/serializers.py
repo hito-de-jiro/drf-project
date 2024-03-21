@@ -1,13 +1,11 @@
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from rest_framework import serializers
-
-from .models import LessonView, Product, Lesson, UserProductAccess
+from .models import LessonView, Product, Lesson
 
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product object"""
-
     class Meta:
         model = Product
         fields = ['product_name']
@@ -24,7 +22,6 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
-
     class Meta:
         model = LessonView
         fields = ['lesson', 'time_watched', 'status_watched']
@@ -32,19 +29,14 @@ class LessonViewSerializer(serializers.ModelSerializer):
 
 class ProductsSerializer(serializers.ModelSerializer):
     """Serializer for products and lessons, available to the user"""
-    product_name = serializers.SerializerMethodField()
     product_lessons = serializers.SerializerMethodField()
 
     class Meta:
-        model = UserProductAccess
+        model = Product
         fields = ['product_name', 'product_lessons']
 
-    def get_product_name(self, obj):
-        return obj.product.product_name
-
     def get_product_lessons(self, obj):
-        product = obj.product
-        lessons = Lesson.objects.filter(products=product)
+        lessons = Lesson.objects.filter(products=obj.id)
         user = self.context['request'].user
 
         lesson_data = []
@@ -61,7 +53,7 @@ class ProductsSerializer(serializers.ModelSerializer):
 
             lesson_dict = {
                 'lesson_title': lesson.lesson_title,
-                'lesson_link': lesson.lesson_link,
+                # 'lesson_link': lesson.lesson_link,
                 'lesson_duration': lesson.lesson_duration,
                 'time_watched': time_watched,
                 'status_watched': status_watched,
@@ -73,14 +65,14 @@ class ProductsSerializer(serializers.ModelSerializer):
 
 class ProductDetailSerializer(ProductsSerializer):
     """Serializer for the product and its lessons available to the user"""
+    product_lessons = serializers.SerializerMethodField()
 
     class Meta:
-        model = UserProductAccess
+        model = Product
         fields = ['product_name', 'product_lessons']
 
     def get_product_lessons(self, obj):
-        product = obj.product
-        lessons = Lesson.objects.filter(products=product)
+        lessons = Lesson.objects.filter(products=obj.id)
         user = self.context['request'].user
 
         lesson_data = []
@@ -94,11 +86,12 @@ class ProductDetailSerializer(ProductsSerializer):
                 status_watched = False
                 time_watched = 0
                 last_watched = 0
+
             status_watched = 'watched' if status_watched else 'not watched'
 
             lesson_dict = {
                 'lesson_title': lesson.lesson_title,
-                'lesson_link': lesson.lesson_link,
+                # 'lesson_link': lesson.lesson_link,
                 'lesson_duration': lesson.lesson_duration,
                 'time_watched': time_watched,
                 'status_watched': status_watched,
@@ -118,7 +111,7 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['product_name', 'watched_lessons', 'watched_time', 'customer_count',
+        fields = ['id', 'product_name', 'watched_lessons', 'watched_time', 'customer_count',
                   'product_purchase']
 
     def to_representation(self, instance):
@@ -135,11 +128,11 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
         return total_time if total_time else 0
 
     def get_customer_count(self, obj):
-        return obj.userproductaccess_set.count()
+        return obj.customer.count()
 
     def get_product_purchase(self, obj):
         total_users = User.objects.count()
-        access_count = obj.userproductaccess_set.count()
+        access_count = obj.customer.count()
         return round(((access_count / total_users) * 100), 2) if total_users > 0 else 0
 
 

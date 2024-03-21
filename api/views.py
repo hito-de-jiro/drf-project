@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 
-from .models import LessonView, Product, Lesson, UserProductAccess
+from .models import LessonView, Product, Lesson
 from .serializers import (
     ProductStatisticsSerializer,
     NewProductSerializer,
@@ -17,7 +17,7 @@ class ProductListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = UserProductAccess.objects.filter(user=user.id)
+        queryset = Product.objects.filter(customer=user, lesson__isnull=False).distinct()
 
         return queryset
 
@@ -28,23 +28,21 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     def get_queryset(self):
         user = self.request.user
         pk = self.kwargs.get('pk')
-        queryset = UserProductAccess.objects.filter(user=user.id, product__pk=pk)
+        try:
+            queryset = Product.objects.filter(customer=user, id=pk, lesson__isnull=False).distinct()
+        except Product.DoesNotExist:
+            queryset = Product.objects.none()
 
         return queryset
 
 
 class ProductStatisticsListAPIView(generics.ListAPIView):
     """Displaying for displaying statistics for all products"""
-
+    queryset = Product.objects.all()
     serializer_class = ProductStatisticsSerializer
 
-    def get_queryset(self):
-        queryset = Product.objects.all()
 
-        return queryset
-
-
-""" Create data"""
+"""create data for tests"""
 
 
 class ProductListCreateAPIView(generics.ListCreateAPIView):
@@ -57,7 +55,6 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Product.objects.filter(owner=self.request.user)
-
         return queryset
 
 
@@ -88,5 +85,4 @@ class UserLessonDetailAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset)
-
         return obj
