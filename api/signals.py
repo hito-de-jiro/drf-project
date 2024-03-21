@@ -3,7 +3,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import UserProductAccess, LessonView
+from .models import LessonView, Product
 
 
 @receiver(pre_save, sender=LessonView)
@@ -17,13 +17,12 @@ def update_lesson_view_status(sender, instance, **kwargs):
     instance.last_watched = timezone.localtime()
 
 
-@receiver(post_save, sender=UserProductAccess)
+@receiver(post_save, sender=Product)
 def update_lessons(sender, instance, created, **kwargs):
     """Update data watched lesson"""
     if created:
-        user = instance.user
-        product = instance.product
-        lessons = product.lesson_set.all()
+        user = instance.customer
+        lessons = instance.lesson_set.all()
 
         for lesson in lessons:
             LessonView.objects.get_or_create(user=user, lesson=lesson)
