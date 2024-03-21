@@ -6,6 +6,7 @@ from .models import LessonView, Product, Lesson
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product object"""
+
     class Meta:
         model = Product
         fields = ['product_name']
@@ -22,6 +23,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class LessonViewSerializer(serializers.ModelSerializer):
     """Serializer for user-related lessons"""
+
     class Meta:
         model = LessonView
         fields = ['lesson', 'time_watched', 'status_watched']
