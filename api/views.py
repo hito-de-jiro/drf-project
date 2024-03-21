@@ -64,7 +64,7 @@ class LessonListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Lesson.objects.filter(products__owner=user)
+        queryset = Lesson.objects.filter(products__owner=user).distinct()
 
         return queryset
 
