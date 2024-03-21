@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Product(models.Model):
-    product_name = models.CharField(max_length=255)
+    product_name = models.CharField(max_length=255, unique=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     customer = models.ManyToManyField(User, related_name='product_customer')
 
