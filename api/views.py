@@ -17,7 +17,7 @@ class ProductListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Product.objects.filter(customer=user, lesson__isnull=False).distinct()
+        queryset = Product.objects.filter(customer=user, product_lesson__isnull=False).distinct()
 
         return queryset
 
@@ -29,7 +29,7 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
         user = self.request.user
         pk = self.kwargs.get('pk')
         try:
-            queryset = Product.objects.filter(customer=user, id=pk, lesson__isnull=False).distinct()
+            queryset = Product.objects.filter(customer=user.id, id=pk, product_lesson__isnull=False).distinct()
         except Product.DoesNotExist:
             queryset = Product.objects.none()
 
