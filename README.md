@@ -1,2 +1,3 @@
 # drf-project
-Project use DRF
+Project use Django, Django REST framework, SQLite.
+

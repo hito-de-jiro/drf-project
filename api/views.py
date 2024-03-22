@@ -1,13 +1,14 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 
-from .models import LessonView, Product, Lesson, UserProductAccess
+from .models import LessonView, Product, Lesson
 from .serializers import (
     ProductStatisticsSerializer,
     NewProductSerializer,
     NewLessonSerializer,
     NewViewedLessonSerializer,
-    ProductsSerializer, ProductDetailSerializer,
+    ProductsSerializer,
+    ProductDetailSerializer,
 )
 
 
@@ -16,7 +17,7 @@ class ProductListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = UserProductAccess.objects.filter(user=user)
+        queryset = Product.objects.filter(customer=user, product_lesson__isnull=False).distinct()
 
         return queryset
 
@@ -27,7 +28,10 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     def get_queryset(self):
         user = self.request.user
         pk = self.kwargs.get('pk')
-        queryset = UserProductAccess.objects.filter(user=user, product__pk=pk)
+        try:
+            queryset = Product.objects.filter(customer=user.id, id=pk, product_lesson__isnull=False).distinct()
+        except Product.DoesNotExist:
+            queryset = Product.objects.none()
 
         return queryset
 
@@ -60,7 +64,7 @@ class LessonListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Lesson.objects.filter(products__owner=user)
+        queryset = Lesson.objects.filter(products__owner=user).distinct()
 
         return queryset
 
