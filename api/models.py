@@ -16,7 +16,7 @@ class Lesson(models.Model):
     lesson_link = models.URLField()
     lesson_duration = models.IntegerField()
 
-    products = models.ManyToManyField(Product)
+    products = models.ManyToManyField(Product, related_name='product_lesson')
 
     def __str__(self):
         return self.lesson_title
