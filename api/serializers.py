@@ -140,7 +140,7 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
 
 
 class NewViewedLessonSerializer(serializers.ModelSerializer):
-    """Serializer for product-related and user-related lessons"""
+    """Serializer for set time watched lessons"""
 
     class Meta:
         model = LessonView
@@ -148,6 +148,8 @@ class NewViewedLessonSerializer(serializers.ModelSerializer):
 
 
 class CustomerProductsSerializer(ProductSerializer):
+    """Serializer for added relation between customers and products"""
+
     class Meta:
         model = Product
         fields = ['product_name', 'customer']
