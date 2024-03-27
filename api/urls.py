@@ -14,6 +14,6 @@ urlpatterns = [
     path('product-statistics/', ProductStatisticsListAPIView.as_view(),
          name='product-statistics-list'),
     # ---- create data for tests ----
-    path('products/<int:pk>/lessons/<int:lesson_id>/update/', UserLessonDetailAPIView.as_view(), name='update-lesson'),
+    path('update-lesson/<int:pk>/', UserLessonDetailAPIView.as_view(), name='update-lesson'),
     path('customer-products/<int:pk>/', CustomerProductsUpdateAPIView.as_view(), name='customer-products'),
 ]
