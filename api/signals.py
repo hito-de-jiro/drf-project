@@ -17,6 +17,20 @@ def update_lesson_view_status(sender, instance, **kwargs):
     instance.last_watched = timezone.localtime()
 
 
+@receiver(pre_save, sender=LessonView)
+def update_lesson_view_time_watched(sender, instance, **kwargs):
+    try:
+        old_instance = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+
+    if instance.time_watched != old_instance.time_watched:
+        if instance.time_watched >= instance.lesson.lesson_duration:
+            instance.time_watched = instance.lesson.lesson_duration
+        elif instance.time_watched < old_instance.time_watched:
+            instance.time_watched = old_instance.time_watched
+
+
 @receiver(m2m_changed, sender=Product.customer.through)
 def update_lessons_on_customer_change(sender, instance, action, **kwargs):
     if action == 'post_add' or action == 'post_remove':
