@@ -1,14 +1,15 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.exceptions import NotFound
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import UpdateModelMixin
+from rest_framework.response import Response
 
-from .models import LessonView, Product, Lesson
+from .models import LessonView, Product
 from .serializers import (
     ProductStatisticsSerializer,
-    NewProductSerializer,
-    NewLessonSerializer,
     NewViewedLessonSerializer,
     ProductsSerializer,
-    ProductDetailSerializer,
+    ProductDetailSerializer, CustomerProductsSerializer,
 )
 
 
@@ -17,7 +18,7 @@ class ProductListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Product.objects.filter(customer=user, product_lesson__isnull=False).distinct()
+        queryset = Product.objects.filter(customer=user.id, product_lesson__isnull=False).distinct()
 
         return queryset
 
@@ -42,47 +43,37 @@ class ProductStatisticsListAPIView(generics.ListAPIView):
     serializer_class = ProductStatisticsSerializer
 
 
-"""create data for tests"""
-
-
-class ProductListCreateAPIView(generics.ListCreateAPIView):
-    """Displaying and create for new products"""
-    serializer_class = NewProductSerializer
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        serializer.save(owner=user)
-
-    def get_queryset(self):
-        queryset = Product.objects.filter(owner=self.request.user)
-        return queryset
-
-
-class LessonListCreateAPIView(generics.ListCreateAPIView):
-    """Displaying and create for new lessons"""
-    serializer_class = NewLessonSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Lesson.objects.filter(products__owner=user).distinct()
-
-        return queryset
-
-    def perform_create(self, serializer):
-        serializer.save()
-
-
-class UserLessonDetailAPIView(generics.RetrieveUpdateAPIView):
+class UserLessonDetailAPIView(GenericAPIView, UpdateModelMixin):
+    """Update lesson viewed information"""
     serializer_class = NewViewedLessonSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        lesson_viewed_id = self.kwargs.get('pk')
-        queryset = LessonView.objects.filter(user=user.id, lesson_id=lesson_viewed_id)
-
-        return queryset
+    queryset = LessonView.objects.all()
 
     def get_object(self):
-        queryset = self.get_queryset()
-        obj = get_object_or_404(queryset)
-        return obj
+        user = self.request.user
+        lesson_id = self.kwargs['pk']
+        try:
+            lesson_view = LessonView.objects.get(user=user, lesson=lesson_id)
+            return lesson_view
+        except LessonView.DoesNotExist:
+            raise NotFound("Lesson not found")
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            return Response({"error": "LessonView does not exist for this user and lesson."},
+                            status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+
+class CustomerProductsUpdateAPIView(generics.RetrieveUpdateAPIView):
+    """Update customer product"""
+    serializer_class = CustomerProductsSerializer
+
+    def get_queryset(self):
+        queryset = Product.objects.filter(id=self.kwargs['pk'])
+
+        return queryset

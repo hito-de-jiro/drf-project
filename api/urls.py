@@ -2,11 +2,9 @@ from django.urls import path
 
 from .views import (
     ProductStatisticsListAPIView,
-    ProductListCreateAPIView,
-    LessonListCreateAPIView,
     UserLessonDetailAPIView,
     ProductListAPIView,
-    ProductDetailAPIView,
+    ProductDetailAPIView, CustomerProductsUpdateAPIView,
 )
 
 urlpatterns = [
@@ -16,7 +14,6 @@ urlpatterns = [
     path('product-statistics/', ProductStatisticsListAPIView.as_view(),
          name='product-statistics-list'),
     # ---- create data for tests ----
-    path('add-products/', ProductListCreateAPIView.as_view(), name='add-product'),
-    path('add-lessons/', LessonListCreateAPIView.as_view(), name='add-lesson'),
-    path('user-lesson-update/<int:pk>', UserLessonDetailAPIView.as_view(), name='update-lesson'),
+    path('update-lesson/<int:pk>/', UserLessonDetailAPIView.as_view(), name='update-lesson'),
+    path('customer-products/<int:pk>/', CustomerProductsUpdateAPIView.as_view(), name='customer-products'),
 ]

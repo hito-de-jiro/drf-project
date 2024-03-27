@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from rest_framework import serializers
+
 from .models import LessonView, Product, Lesson
 
 
@@ -138,37 +139,17 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
         return round(((access_count / total_users) * 100), 2) if total_users > 0 else 0
 
 
-""""Create data for tests"""
-
-
-class NewProductSerializer(serializers.ModelSerializer):
-    """Serializer for Product and Lesson objects"""
-
-    class Meta:
-        model = Product
-        fields = ['product_name', 'owner', 'lessons']
-        read_only_fields = ['owner']
-
-    lessons = serializers.SerializerMethodField()
-
-    def get_lessons(self, obj):
-        lessons = Lesson.objects.filter(products=obj)
-        return LessonSerializer(lessons, many=True).data
-
-
-class NewLessonSerializer(serializers.ModelSerializer):
-    """Serializer for a new lesson"""
-    products = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), many=True)
-
-    class Meta:
-        model = Lesson
-        fields = ['lesson_title', 'lesson_link', 'lesson_duration', 'products', ]
-
-
 class NewViewedLessonSerializer(serializers.ModelSerializer):
-    """Serializer for product-related and user-related lessons"""
+    """Serializer for set time watched lessons"""
 
     class Meta:
         model = LessonView
-        fields = '__all__'
-        read_only_fields = ['products', 'status', 'user', 'lesson']
+        fields = ['time_watched']
+
+
+class CustomerProductsSerializer(ProductSerializer):
+    """Serializer for added relation between customers and products"""
+
+    class Meta:
+        model = Product
+        fields = ['product_name', 'customer']
