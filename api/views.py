@@ -68,17 +68,6 @@ class UserLessonDetailAPIView(GenericAPIView, UpdateModelMixin):
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        if instance is None:
-            return Response({"error": "LessonView does not exist for this user and lesson."},
-                            status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
-
 
 class CustomerProductsUpdateAPIView(generics.RetrieveUpdateAPIView):
     """Update customer product"""
