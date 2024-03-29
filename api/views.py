@@ -28,15 +28,15 @@ class ProductListAPIView(generics.ListAPIView):
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
+    """The product with lessons that the current user has permission"""
     serializer_class = ProductDetailSerializer
 
     def get_queryset(self):
         user = self.request.user
         pk = self.kwargs.get('pk')
-        try:
-            queryset = Product.objects.filter(customer=user.id, id=pk, product_lesson__isnull=False).distinct()
-        except Product.DoesNotExist:
-            queryset = Product.objects.none()
+        queryset = Product.objects.filter(id=pk, product_lesson__isnull=False).distinct()
+        # checking customer like owner
+        queryset = queryset.filter(Q(customer=user) | Q(owner=user), id=pk)
 
         return queryset
 
