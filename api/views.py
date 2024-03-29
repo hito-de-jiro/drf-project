@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import GenericAPIView
@@ -14,11 +15,14 @@ from .serializers import (
 
 
 class ProductListAPIView(generics.ListAPIView):
+    """List all products with lessons that the current user have permission"""
     serializer_class = ProductsSerializer
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Product.objects.filter(customer=user.id, product_lesson__isnull=False).distinct()
+        queryset = Product.objects.filter(product_lesson__isnull=False).distinct()
+        # checking customer like owner
+        queryset = queryset.filter(Q(customer=user) | Q(owner=user))
 
         return queryset
 
