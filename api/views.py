@@ -1,16 +1,14 @@
 from django.db.models import Q
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
 
-from .models import LessonView, Product
+from .models import LessonView, Product, Lesson
 from .serializers import (
     ProductStatisticsSerializer,
-    NewViewedLessonSerializer,
     ProductsSerializer,
-    ProductDetailSerializer, CustomerProductsSerializer,
+    ProductDetailSerializer,
+    LessonViewSerializer,
 )
 
 
@@ -47,37 +45,30 @@ class ProductStatisticsListAPIView(generics.ListAPIView):
     serializer_class = ProductStatisticsSerializer
 
 
-class UserLessonDetailAPIView(GenericAPIView, UpdateModelMixin):
-    """Update lesson viewed information"""
-    serializer_class = NewViewedLessonSerializer
-    queryset = LessonView.objects.all()
-
-    def get_object(self):
-        user = self.request.user
-        lesson_id = self.kwargs['pk']
-        try:
-            lesson_view = LessonView.objects.get(user=user, lesson=lesson_id)
-            return lesson_view
-        except LessonView.DoesNotExist:
-            raise NotFound("Lesson not found")
-
-    def get(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance is None:
-            return Response({"error": "LessonView does not exist for this user and lesson."},
-                            status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+class LessonViewCreateAPIView(UpdateAPIView):
+    """Update watched time in the viewed lesson, only current user is allowed"""
+    serializer_class = LessonViewSerializer
 
     def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        lesson_id = int(request.data.get('lesson'))
+        user = self.request.user
+        time_watched = int(request.data.get('time_watched'))
 
+        if not lesson_id or not time_watched:
+            return Response({'message': 'Missing required data'}, status=status.HTTP_400_BAD_REQUEST)
 
-class CustomerProductsUpdateAPIView(generics.RetrieveUpdateAPIView):
-    """Update customer product"""
-    serializer_class = CustomerProductsSerializer
+        try:
+            if user.product_customer.filter(product_lesson=lesson_id).exists():
+                lesson_instance = Lesson.objects.get(pk=lesson_id)
 
-    def get_queryset(self):
-        queryset = Product.objects.filter(id=self.kwargs['pk'])
+                lesson_view, created = LessonView.objects.get_or_create(user=user, lesson=lesson_instance)
+                lesson_view.time_watched = int(time_watched)
+                lesson_view.save()
 
-        return queryset
+                serializer = LessonViewSerializer(lesson_view)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'User does not have access to this lesson'},
+                                status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
