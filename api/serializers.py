@@ -27,7 +27,7 @@ class LessonViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LessonView
-        fields = ['lesson', 'time_watched', 'status_watched']
+        fields = ['lesson', 'time_watched']
 
 
 class ProductsSerializer(serializers.ModelSerializer):
@@ -134,7 +134,7 @@ class ProductStatisticsSerializer(serializers.ModelSerializer):
         return obj.customer.count()
 
     def get_product_purchase(self, obj):
-        total_users = User.objects.count()
+        total_users = User.objects.count() - 1
         access_count = obj.customer.count()
         return round(((access_count / total_users) * 100), 2) if total_users > 0 else 0
 
@@ -145,11 +145,3 @@ class NewViewedLessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = LessonView
         fields = ['time_watched']
-
-
-class CustomerProductsSerializer(ProductSerializer):
-    """Serializer for added relation between customers and products"""
-
-    class Meta:
-        model = Product
-        fields = ['product_name', 'customer']
