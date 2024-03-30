@@ -1,9 +1,8 @@
-from django.db.models.signals import m2m_changed
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import LessonView, Product
+from .models import LessonView
 
 
 @receiver(pre_save, sender=LessonView)
