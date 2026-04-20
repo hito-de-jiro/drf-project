@@ -9,32 +9,26 @@ To clone the repository, run the following command
 git clone https://github.com/hito-de-jiro/drf-project
 ```
 ### Preparation
-Install Python venv
-```shell
-pip install virtualenv
-virtualenv venv
-```
-Activate venv (windows)
-```shell
-venv\Scripts\activate
-```
+The project uses UV
+
 ### Build
 1. Install dependencies of project
    ```shell
-   pip install -r requirements.txt
+   uv init
+   uv sync
    ```
 2. Make and apply project migrations
    ```shell
-   python manage.py makemigrations
-   python manage.py migrate
+   uv run python manage.py makemigrations
+   uv run python manage.py migrate
    ```
 3. Create superuser
    ```shell
-    python manage.py createsuperuser
+    uv run python manage.py createsuperuser
    ```
 4. Run server
    ```shell
-   python manage.py runserver
+   uv run python manage.py runserver
    ```
 ### Using the app
 
